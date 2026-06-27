@@ -14,6 +14,7 @@ from gaingoblin.theme import GOBLIN_COLORS
 
 class HoldingsTable(QTableWidget):
     HEADERS = [
+        "Account",
         "Symbol",
         "Shares",
         "Buy Price",
@@ -63,6 +64,7 @@ class HoldingsTable(QTableWidget):
             if holding.target_sell_price <= Decimal("0"):
                 goblin_note = "No exit plan? Risky treasure."
             values = [
+                holding.account_name,
                 holding.symbol_name,
                 str(holding.shares),
                 self._format_money(holding.buy_price),
@@ -79,7 +81,7 @@ class HoldingsTable(QTableWidget):
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
                 item.setData(Qt.ItemDataRole.UserRole, holding)
-                if column in {1, 2, 3, 4, 5, 6, 7, 8, 9}:
+                if column in {2, 3, 4, 5, 6, 7, 8, 9, 10}:
                     item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self._style_item(item, column, calculated.projected_profit, holding.target_sell_price)
                 if self.HEADERS[column] in self.TOOL_TIPS:
@@ -105,15 +107,15 @@ class HoldingsTable(QTableWidget):
         projected_profit: Decimal,
         target_sell_price: Decimal,
     ) -> None:
-        if column == 8:
+        if column == 9:
             font = QFont(item.font())
             font.setBold(True)
             item.setFont(font)
             color = GOBLIN_COLORS["danger"] if projected_profit < Decimal("0") else GOBLIN_COLORS["green"]
             item.setForeground(QBrush(QColor(color)))
-        elif column == 10 and target_sell_price <= Decimal("0"):
+        elif column == 11 and target_sell_price <= Decimal("0"):
             item.setForeground(QBrush(QColor(GOBLIN_COLORS["gold"])))
-        elif column == 10 and projected_profit < Decimal("0"):
+        elif column == 11 and projected_profit < Decimal("0"):
             item.setForeground(QBrush(QColor(GOBLIN_COLORS["danger"])))
 
     @staticmethod

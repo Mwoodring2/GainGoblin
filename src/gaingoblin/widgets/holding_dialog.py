@@ -26,6 +26,8 @@ class HoldingDialog(QDialog):
     def __init__(self, holding: Holding | None = None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._holding_id = holding.id if holding else None
+        self._account_id = holding.account_id if holding else None
+        self._account_name = holding.account_name if holding else "Manual Hoard"
         self.setWindowTitle("Edit Treasure Entry" if holding else "Add Treasure to the Hoard")
         self.setModal(True)
         self.setSizeGripEnabled(True)
@@ -89,9 +91,15 @@ class HoldingDialog(QDialog):
             return
         super().accept()
 
+    def set_account(self, account_id: int | None, account_name: str) -> None:
+        self._account_id = account_id
+        self._account_name = account_name
+
     def holding(self) -> Holding:
         return Holding(
             id=self._holding_id,
+            account_id=self._account_id,
+            account_name=self._account_name,
             symbol_name=self.symbol_name.text().strip(),
             shares=to_decimal(self.shares.text()),
             buy_price=to_decimal(self.buy_price.text()),
@@ -109,6 +117,7 @@ class HoldingDialog(QDialog):
         self.target_sell_price.setText(str(holding.target_sell_price))
         self.sell_fees.setText(str(holding.sell_fees))
         self.notes.setPlainText(holding.notes)
+
 
 class MoneyEdit(QLineEdit):
     def __init__(self, decimals: int, parent: QWidget | None = None) -> None:

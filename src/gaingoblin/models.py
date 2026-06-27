@@ -5,6 +5,16 @@ from decimal import Decimal
 
 
 @dataclass(slots=True)
+class Account:
+    name: str
+    institution_label: str = ""
+    account_type: str = ""
+    last_four: str = ""
+    notes: str = ""
+    id: int | None = None
+
+
+@dataclass(slots=True)
 class Holding:
     symbol_name: str
     shares: Decimal
@@ -14,6 +24,8 @@ class Holding:
     sell_fees: Decimal
     notes: str = ""
     id: int | None = None
+    account_id: int | None = None
+    account_name: str = "Manual Hoard"
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,3 +36,14 @@ class HoldingCalculations:
     projected_profit: Decimal
     roi_percent: Decimal
     goblin_note: str
+
+
+@dataclass(frozen=True, slots=True)
+class ImportBatch:
+    source_path: str
+    source_type: str
+    row_count: int
+    accepted_count: int
+    skipped_count: int
+    notes: str = ""
+    id: int | None = None

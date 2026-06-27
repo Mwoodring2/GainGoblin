@@ -6,6 +6,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QComboBox,
     QFrame,
     QFileDialog,
     QHBoxLayout,
@@ -26,6 +27,7 @@ from gaingoblin.widgets.clipboard_shell import ClipboardShell
 from gaingoblin.widgets.goblin_companion import GoblinCompanionWidget
 from gaingoblin.widgets.holding_dialog import HoldingDialog
 from gaingoblin.widgets.holdings_table import HoldingsTable
+from gaingoblin.widgets.import_dialog import ImportDialog
 from gaingoblin.widgets.summary_cards import SummaryCards
 
 
@@ -34,6 +36,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.repository = repository
         self.holdings: list[Holding] = []
+        self._loading_accounts = False
         self.setWindowTitle(f"Gain Goblin v{__version__}")
         self.resize(1240, 860)
         self.setMinimumSize(980, 700)
@@ -50,25 +53,38 @@ class MainWindow(QMainWindow):
         self.table = HoldingsTable()
         self.table.setObjectName("HoldingsLedger")
 
+        self.account_filter = QComboBox()
+        self.account_filter.currentIndexChanged.connect(self._account_filter_changed)
+
         self.add_button = QPushButton("Add Holding")
+        self.import_button = QPushButton("Import Spreadsheet")
         self.edit_button = QPushButton("Edit Selected")
         self.delete_button = QPushButton("Delete Selected")
         self.export_button = QPushButton("Export CSV")
         self.add_button.setObjectName("PrimaryActionButton")
+        self.import_button.setObjectName("SecondaryActionButton")
         self.export_button.setObjectName("SecondaryActionButton")
         self.edit_button.setObjectName("SecondaryActionButton")
         self.delete_button.setObjectName("DangerActionButton")
+        self.import_button.setToolTip("Import holdings from a CSV or XLSX file.")
 
         self.add_button.clicked.connect(self.add_holding)
+        self.import_button.clicked.connect(self.import_spreadsheet)
         self.edit_button.clicked.connect(self.edit_selected)
         self.delete_button.clicked.connect(self.delete_selected)
         self.export_button.clicked.connect(self.export_csv)
         self.table.itemDoubleClicked.connect(lambda _item: self.edit_selected())
         self.table.itemSelectionChanged.connect(self._update_buttons)
 
+        filter_row = QHBoxLayout()
+        filter_row.setSpacing(8)
+        filter_row.addWidget(QLabel("Account"))
+        filter_row.addWidget(self.account_filter, 1)
+
         actions = QHBoxLayout()
         actions.setSpacing(10)
         actions.addWidget(self.add_button)
+        actions.addWidget(self.import_button)
         actions.addWidget(self.edit_button)
         actions.addWidget(self.delete_button)
         actions.addStretch(1)
@@ -79,6 +95,7 @@ class MainWindow(QMainWindow):
         ledger_layout = QVBoxLayout(ledger_panel)
         ledger_layout.setContentsMargins(16, 14, 16, 16)
         ledger_layout.setSpacing(12)
+        ledger_layout.addLayout(filter_row)
         ledger_layout.addLayout(actions)
         ledger_layout.addWidget(self.table, 1)
 
@@ -125,7 +142,10 @@ class MainWindow(QMainWindow):
         self._update_responsive_layout()
 
     def refresh(self, status_message: str | None = None) -> None:
-        self.holdings = self.repository.list_holdings()
+        selected_account_id = self._selected_account_id()
+        self._refresh_account_filter(selected_account_id)
+        selected_account_id = self._selected_account_id()
+        self.holdings = self.repository.list_holdings(selected_account_id)
         self.table.set_holdings(self.holdings)
         self.summary_cards.update_summary(portfolio_summary(self.holdings))
         self._update_buttons()
@@ -135,9 +155,24 @@ class MainWindow(QMainWindow):
 
     def add_holding(self) -> None:
         dialog = HoldingDialog(parent=self)
+        account_id = self._selected_account_id()
+        if account_id is not None:
+            account_name = self.account_filter.currentText()
+            dialog.set_account(account_id, account_name)
         if dialog.exec():
             self.repository.add_holding(dialog.holding())
             self.refresh("Holding added to the hoard.")
+
+    def import_spreadsheet(self) -> None:
+        dialog = ImportDialog(self.repository, parent=self)
+        if dialog.exec():
+            result = dialog.import_result
+            if result is not None:
+                self.refresh(
+                    f"Imported {result.imported_count} holdings. Skipped {result.skipped_count}."
+                )
+            else:
+                self.refresh()
 
     def edit_selected(self) -> None:
         holding = self.table.selected_holding()
@@ -179,6 +214,7 @@ class MainWindow(QMainWindow):
             writer = csv.writer(handle)
             writer.writerow(
                 [
+                    "account_name",
                     "symbol_name",
                     "shares",
                     "buy_price",
@@ -198,6 +234,7 @@ class MainWindow(QMainWindow):
                 calculated = calculate_holding(holding)
                 writer.writerow(
                     [
+                        holding.account_name,
                         holding.symbol_name,
                         holding.shares,
                         holding.buy_price,
@@ -216,6 +253,26 @@ class MainWindow(QMainWindow):
 
         QMessageBox.information(self, "Export Complete", f"CSV exported to:\n{path}")
         self.statusBar().showMessage("Export complete. Ledger packed.", 4000)
+
+    def _refresh_account_filter(self, selected_account_id: int | None) -> None:
+        self._loading_accounts = True
+        self.account_filter.clear()
+        self.account_filter.addItem("All Accounts", None)
+        selected_index = 0
+        for account in self.repository.list_accounts():
+            self.account_filter.addItem(account.name, account.id)
+            if selected_account_id is not None and account.id == selected_account_id:
+                selected_index = self.account_filter.count() - 1
+        self.account_filter.setCurrentIndex(selected_index)
+        self._loading_accounts = False
+
+    def _selected_account_id(self) -> int | None:
+        value = self.account_filter.currentData()
+        return int(value) if value is not None else None
+
+    def _account_filter_changed(self) -> None:
+        if not self._loading_accounts:
+            self.refresh()
 
     def _update_buttons(self) -> None:
         has_selection = self.table.selected_holding() is not None

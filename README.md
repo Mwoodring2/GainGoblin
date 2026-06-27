@@ -11,6 +11,8 @@ enter.
 - Summary cards for total cost basis, target net value, projected profit, and ROI
 - Animated lower-right goblin companion with portfolio reactions
 - Clipboard-and-parchment art shell for the Gain Goblin workspace
+- CSV/XLSX holdings import with local preview
+- Account grouping for manually imported or entered holdings
 - CSV export of entered and calculated fields
 - Local SQLite persistence
 - Decimal-based financial calculations
@@ -74,3 +76,29 @@ python -m pytest
 - Improved responsive summary card layout
 - Added UI layout tests for the clipboard shell and companion area
 - Kept all stock math local and manual-only
+
+## Importing Holdings
+
+Gain Goblin can import user-provided CSV and XLSX files.
+
+Imports are local-only. Gain Goblin does not connect to brokerage accounts,
+request passwords, fetch live balances, or sync account data.
+
+Supported import fields:
+
+- symbol / ticker
+- shares / quantity
+- buy price / average cost
+- optional fees
+- optional target sell price
+- optional account name
+- optional notes
+
+## v0.1.3-alpha
+
+- Added CSV/XLSX holdings import
+- Added account grouping
+- Added import preview flow
+- Added duplicate-skip protection
+- Added import tests
+- Kept all account data local and manually imported
