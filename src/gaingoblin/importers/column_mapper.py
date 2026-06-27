@@ -7,6 +7,8 @@ ZERO = Decimal("0")
 
 COLUMN_ALIASES = {
     "symbol_name": [
+        "symbol_name",
+        "symbol name",
         "symbol",
         "ticker",
         "ticker symbol",
@@ -23,6 +25,7 @@ COLUMN_ALIASES = {
         "units",
     ],
     "buy_price": [
+        "buy_price",
         "average cost",
         "avg cost",
         "cost basis per share",
@@ -30,26 +33,31 @@ COLUMN_ALIASES = {
         "buy price",
         "average price",
         "avg price",
+        "price paid",
     ],
     "buy_fees": [
+        "buy_fees",
         "fees",
         "commission",
         "buy fees",
         "purchase fees",
     ],
     "target_sell_price": [
+        "target_sell_price",
         "target sell price",
         "target",
         "sell target",
         "planned sell",
     ],
     "sell_fees": [
+        "sell_fees",
         "sell fees",
         "sale fees",
         "estimated sell fees",
         "exit fees",
     ],
     "account_name": [
+        "account_name",
         "account",
         "account name",
         "portfolio",

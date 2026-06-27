@@ -1,1 +1,1 @@
-"""Local spreadsheet import helpers for Gain Goblin."""
+"""Local import helpers for Gain Goblin."""

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from gaingoblin.importers.import_models import RawImportRow
 
-SUPPORTED_EXTENSIONS = {".csv", ".xlsx"}
+SUPPORTED_EXTENSIONS = {".csv", ".xlsx", ".xlsm"}
 
 
 def read_spreadsheet(path: Path | str) -> list[RawImportRow]:
@@ -13,9 +13,9 @@ def read_spreadsheet(path: Path | str) -> list[RawImportRow]:
     suffix = source.suffix.lower()
     if suffix == ".csv":
         return read_csv(source)
-    if suffix == ".xlsx":
+    if suffix in {".xlsx", ".xlsm"}:
         return read_xlsx(source)
-    raise ValueError(f"Unsupported import file type: {suffix}")
+    raise ValueError(f"Unsupported spreadsheet file type: {suffix}")
 
 
 def read_csv(path: Path) -> list[RawImportRow]:

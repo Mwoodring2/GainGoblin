@@ -12,6 +12,8 @@ enter.
 - Animated lower-right goblin companion with portfolio reactions
 - Clipboard-and-parchment art shell for the Gain Goblin workspace
 - CSV/XLSX holdings import with local preview
+- Text-based PDF holdings import with required preview
+- Paste-from-clipboard/table text import with cautious parsing
 - Account grouping for manually imported or entered holdings
 - CSV export of entered and calculated fields
 - Local SQLite persistence
@@ -79,10 +81,11 @@ python -m pytest
 
 ## Importing Holdings
 
-Gain Goblin can import user-provided CSV and XLSX files.
+Gain Goblin can import user-provided CSV, XLSX, text-based PDF, and pasted table/text data.
 
 Imports are local-only. Gain Goblin does not connect to brokerage accounts,
-request passwords, fetch live balances, or sync account data.
+request passwords, fetch live balances, or sync account data. PDF and pasted imports are
+best-effort and always require preview before saving.
 
 Supported import fields:
 
@@ -94,6 +97,16 @@ Supported import fields:
 - optional account name
 - optional notes
 
+PDF limitations:
+
+- text-based PDFs only
+- scanned/image-only PDFs are not supported yet
+- no OCR is included in v0.1.4-alpha
+
+Paste import can read simple copied tables or cautious Robinhood-style text blocks,
+but it does not invent missing financial values. Rows without a detected buy price
+are skipped in the preview.
+
 ## v0.1.3-alpha
 
 - Added CSV/XLSX holdings import
@@ -102,3 +115,12 @@ Supported import fields:
 - Added duplicate-skip protection
 - Added import tests
 - Kept all account data local and manually imported
+
+## v0.1.4-alpha
+
+- Added Robinhood-friendly local import options
+- Added text-based PDF statement/report import using pypdf
+- Added paste-from-clipboard/table text import
+- Added cautious Robinhood-style text parser
+- Required preview before importing PDF or pasted rows
+- Kept imports local-only, read-only, and credential-free

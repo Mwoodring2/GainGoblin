@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         self.account_filter.currentIndexChanged.connect(self._account_filter_changed)
 
         self.add_button = QPushButton("Add Holding")
-        self.import_button = QPushButton("Import Spreadsheet")
+        self.import_button = QPushButton("Import File / Paste")
         self.edit_button = QPushButton("Edit Selected")
         self.delete_button = QPushButton("Delete Selected")
         self.export_button = QPushButton("Export CSV")
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
         self.export_button.setObjectName("SecondaryActionButton")
         self.edit_button.setObjectName("SecondaryActionButton")
         self.delete_button.setObjectName("DangerActionButton")
-        self.import_button.setToolTip("Import holdings from a CSV or XLSX file.")
+        self.import_button.setToolTip("Import local CSV, XLSX, PDF, or pasted holdings text.")
 
         self.add_button.clicked.connect(self.add_holding)
         self.import_button.clicked.connect(self.import_spreadsheet)
