@@ -1,0 +1,470 @@
+{
+  "source": "ChatGPT Image Jun 26, 2026, 06_38_29 PM.png",
+  "canvas_size": [
+    1448,
+    1086
+  ],
+  "note": "Generated from a flattened concept image. Component separation and clean base are approximate; use as layout/reference assets or replace with true layered art later.",
+  "layers": [
+    {
+      "name": "01_full_reference",
+      "description": "Original flattened concept reference.",
+      "box_xyxy": [
+        0,
+        0,
+        1448,
+        1086
+      ],
+      "position_xy": [
+        0,
+        0
+      ],
+      "size_wh": [
+        1448,
+        1086
+      ],
+      "cropped_png": "cropped_components/01_full_reference.png",
+      "canvas_png": "full_canvas_layers/01_full_reference_canvas.png"
+    },
+    {
+      "name": "02_top_metal_clip",
+      "description": "Top metal clipboard clip; rectangular crop from flattened art.",
+      "box_xyxy": [
+        410,
+        0,
+        1035,
+        175
+      ],
+      "position_xy": [
+        410,
+        0
+      ],
+      "size_wh": [
+        625,
+        175
+      ],
+      "cropped_png": "cropped_components/02_top_metal_clip.png",
+      "canvas_png": "full_canvas_layers/02_top_metal_clip_canvas.png"
+    },
+    {
+      "name": "03_left_sidebar_panel",
+      "description": "Left vertical parchment/sidebar area with stacked tab buttons.",
+      "box_xyxy": [
+        75,
+        120,
+        330,
+        660
+      ],
+      "position_xy": [
+        75,
+        120
+      ],
+      "size_wh": [
+        255,
+        540
+      ],
+      "cropped_png": "cropped_components/03_left_sidebar_panel.png",
+      "canvas_png": "full_canvas_layers/03_left_sidebar_panel_canvas.png"
+    },
+    {
+      "name": "04_left_tab_01",
+      "description": "Individual left sidebar tab/button 1.",
+      "box_xyxy": [
+        95,
+        137,
+        315,
+        197
+      ],
+      "position_xy": [
+        95,
+        137
+      ],
+      "size_wh": [
+        220,
+        60
+      ],
+      "cropped_png": "cropped_components/04_left_tab_01.png",
+      "canvas_png": "full_canvas_layers/04_left_tab_01_canvas.png"
+    },
+    {
+      "name": "05_left_tab_02",
+      "description": "Individual left sidebar tab/button 2.",
+      "box_xyxy": [
+        95,
+        202,
+        315,
+        262
+      ],
+      "position_xy": [
+        95,
+        202
+      ],
+      "size_wh": [
+        220,
+        60
+      ],
+      "cropped_png": "cropped_components/05_left_tab_02.png",
+      "canvas_png": "full_canvas_layers/05_left_tab_02_canvas.png"
+    },
+    {
+      "name": "06_left_tab_03",
+      "description": "Individual left sidebar tab/button 3.",
+      "box_xyxy": [
+        95,
+        267,
+        315,
+        328
+      ],
+      "position_xy": [
+        95,
+        267
+      ],
+      "size_wh": [
+        220,
+        61
+      ],
+      "cropped_png": "cropped_components/06_left_tab_03.png",
+      "canvas_png": "full_canvas_layers/06_left_tab_03_canvas.png"
+    },
+    {
+      "name": "07_left_tab_04",
+      "description": "Individual left sidebar tab/button 4.",
+      "box_xyxy": [
+        95,
+        333,
+        315,
+        394
+      ],
+      "position_xy": [
+        95,
+        333
+      ],
+      "size_wh": [
+        220,
+        61
+      ],
+      "cropped_png": "cropped_components/07_left_tab_04.png",
+      "canvas_png": "full_canvas_layers/07_left_tab_04_canvas.png"
+    },
+    {
+      "name": "08_left_tab_05",
+      "description": "Individual left sidebar tab/button 5.",
+      "box_xyxy": [
+        95,
+        399,
+        315,
+        460
+      ],
+      "position_xy": [
+        95,
+        399
+      ],
+      "size_wh": [
+        220,
+        61
+      ],
+      "cropped_png": "cropped_components/08_left_tab_05.png",
+      "canvas_png": "full_canvas_layers/08_left_tab_05_canvas.png"
+    },
+    {
+      "name": "09_left_tab_06",
+      "description": "Individual left sidebar tab/button 6.",
+      "box_xyxy": [
+        95,
+        465,
+        315,
+        526
+      ],
+      "position_xy": [
+        95,
+        465
+      ],
+      "size_wh": [
+        220,
+        61
+      ],
+      "cropped_png": "cropped_components/09_left_tab_06.png",
+      "canvas_png": "full_canvas_layers/09_left_tab_06_canvas.png"
+    },
+    {
+      "name": "10_left_tab_07",
+      "description": "Individual left sidebar tab/button 7.",
+      "box_xyxy": [
+        95,
+        532,
+        315,
+        595
+      ],
+      "position_xy": [
+        95,
+        532
+      ],
+      "size_wh": [
+        220,
+        63
+      ],
+      "cropped_png": "cropped_components/10_left_tab_07.png",
+      "canvas_png": "full_canvas_layers/10_left_tab_07_canvas.png"
+    },
+    {
+      "name": "11_left_note_card",
+      "description": "Pinned note card area at lower left.",
+      "box_xyxy": [
+        82,
+        660,
+        330,
+        890
+      ],
+      "position_xy": [
+        82,
+        660
+      ],
+      "size_wh": [
+        248,
+        230
+      ],
+      "cropped_png": "cropped_components/11_left_note_card.png",
+      "canvas_png": "full_canvas_layers/11_left_note_card_canvas.png"
+    },
+    {
+      "name": "12_title_input",
+      "description": "Long title/search/input field.",
+      "box_xyxy": [
+        365,
+        185,
+        952,
+        240
+      ],
+      "position_xy": [
+        365,
+        185
+      ],
+      "size_wh": [
+        587,
+        55
+      ],
+      "cropped_png": "cropped_components/12_title_input.png",
+      "canvas_png": "full_canvas_layers/12_title_input_canvas.png"
+    },
+    {
+      "name": "13_dropdown_field",
+      "description": "Centered dropdown field.",
+      "box_xyxy": [
+        460,
+        248,
+        792,
+        294
+      ],
+      "position_xy": [
+        460,
+        248
+      ],
+      "size_wh": [
+        332,
+        46
+      ],
+      "cropped_png": "cropped_components/13_dropdown_field.png",
+      "canvas_png": "full_canvas_layers/13_dropdown_field_canvas.png"
+    },
+    {
+      "name": "14_center_large_panel",
+      "description": "Large center rounded panel.",
+      "box_xyxy": [
+        350,
+        318,
+        965,
+        525
+      ],
+      "position_xy": [
+        350,
+        318
+      ],
+      "size_wh": [
+        615,
+        207
+      ],
+      "cropped_png": "cropped_components/14_center_large_panel.png",
+      "canvas_png": "full_canvas_layers/14_center_large_panel_canvas.png"
+    },
+    {
+      "name": "15_right_summary_panel",
+      "description": "Right rounded summary/detail panel.",
+      "box_xyxy": [
+        980,
+        170,
+        1345,
+        420
+      ],
+      "position_xy": [
+        980,
+        170
+      ],
+      "size_wh": [
+        365,
+        250
+      ],
+      "cropped_png": "cropped_components/15_right_summary_panel.png",
+      "canvas_png": "full_canvas_layers/15_right_summary_panel_canvas.png"
+    },
+    {
+      "name": "16_metric_strip_four_slots",
+      "description": "Wide four-column metric strip.",
+      "box_xyxy": [
+        350,
+        510,
+        1300,
+        628
+      ],
+      "position_xy": [
+        350,
+        510
+      ],
+      "size_wh": [
+        950,
+        118
+      ],
+      "cropped_png": "cropped_components/16_metric_strip_four_slots.png",
+      "canvas_png": "full_canvas_layers/16_metric_strip_four_slots_canvas.png"
+    },
+    {
+      "name": "17_table_panel",
+      "description": "Large table/list panel with faint row lines.",
+      "box_xyxy": [
+        350,
+        640,
+        1300,
+        870
+      ],
+      "position_xy": [
+        350,
+        640
+      ],
+      "size_wh": [
+        950,
+        230
+      ],
+      "cropped_png": "cropped_components/17_table_panel.png",
+      "canvas_png": "full_canvas_layers/17_table_panel_canvas.png"
+    },
+    {
+      "name": "18_bottom_primary_button",
+      "description": "Green primary bottom button.",
+      "box_xyxy": [
+        185,
+        883,
+        500,
+        970
+      ],
+      "position_xy": [
+        185,
+        883
+      ],
+      "size_wh": [
+        315,
+        87
+      ],
+      "cropped_png": "cropped_components/18_bottom_primary_button.png",
+      "canvas_png": "full_canvas_layers/18_bottom_primary_button_canvas.png"
+    },
+    {
+      "name": "19_bottom_secondary_button_left",
+      "description": "Dark secondary bottom button left.",
+      "box_xyxy": [
+        515,
+        883,
+        815,
+        967
+      ],
+      "position_xy": [
+        515,
+        883
+      ],
+      "size_wh": [
+        300,
+        84
+      ],
+      "cropped_png": "cropped_components/19_bottom_secondary_button_left.png",
+      "canvas_png": "full_canvas_layers/19_bottom_secondary_button_left_canvas.png"
+    },
+    {
+      "name": "20_bottom_secondary_button_right",
+      "description": "Dark secondary bottom button right.",
+      "box_xyxy": [
+        830,
+        883,
+        1125,
+        967
+      ],
+      "position_xy": [
+        830,
+        883
+      ],
+      "size_wh": [
+        295,
+        84
+      ],
+      "cropped_png": "cropped_components/20_bottom_secondary_button_right.png",
+      "canvas_png": "full_canvas_layers/20_bottom_secondary_button_right_canvas.png"
+    },
+    {
+      "name": "21_paper_texture_patch",
+      "description": "Plain parchment texture sample for tiling/fills.",
+      "box_xyxy": [
+        610,
+        398,
+        925,
+        495
+      ],
+      "position_xy": [
+        610,
+        398
+      ],
+      "size_wh": [
+        315,
+        97
+      ],
+      "cropped_png": "cropped_components/21_paper_texture_patch.png",
+      "canvas_png": "full_canvas_layers/21_paper_texture_patch_canvas.png"
+    },
+    {
+      "name": "22_wood_frame_patch",
+      "description": "Wood texture sample from top frame.",
+      "box_xyxy": [
+        55,
+        30,
+        260,
+        95
+      ],
+      "position_xy": [
+        55,
+        30
+      ],
+      "size_wh": [
+        205,
+        65
+      ],
+      "cropped_png": "cropped_components/22_wood_frame_patch.png",
+      "canvas_png": "full_canvas_layers/22_wood_frame_patch_canvas.png"
+    },
+    {
+      "name": "23_metal_corner_patch",
+      "description": "Metal/wood corner reference patch.",
+      "box_xyxy": [
+        1310,
+        10,
+        1438,
+        145
+      ],
+      "position_xy": [
+        1310,
+        10
+      ],
+      "size_wh": [
+        128,
+        135
+      ],
+      "cropped_png": "cropped_components/23_metal_corner_patch.png",
+      "canvas_png": "full_canvas_layers/23_metal_corner_patch_canvas.png"
+    }
+  ]
+}
