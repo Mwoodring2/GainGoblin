@@ -1,6 +1,27 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.ruff_cache/
 .venv/
+.mypy_cache/
+
+# Local databases
 data/*.sqlite
 data/*.sqlite-*
+
+# Local settings, caches, and secrets
+data/*.json
+data/*.json.*
+.env
+.env.*
+*.env
+logs/
+*.log
+
+# Preserve documented examples
+!*.example.json
+!*.example.toml
+!data/*.example.json
+
+*.egg-info/
+

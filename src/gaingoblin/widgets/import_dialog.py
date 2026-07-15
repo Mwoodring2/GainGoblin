@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QColor
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -27,7 +28,11 @@ from gaingoblin.database import DEFAULT_ACCOUNT_NAME, HoldingRepository
 from gaingoblin.importers.holdings_importer import create_import_preview, import_preview_rows
 from gaingoblin.importers.import_models import ImportPreviewRow, ImportResult, RawImportRow
 from gaingoblin.importers.pasted_text_reader import read_pasted_text
-from gaingoblin.importers.pdf_reader import IMAGE_ONLY_MESSAGE, read_pdf
+from gaingoblin.importers.pdf_reader import (
+    IMAGE_ONLY_MESSAGE,
+    NO_IMPORTABLE_HOLDINGS_MESSAGE,
+    read_pdf,
+)
 from gaingoblin.importers.spreadsheet_reader import read_spreadsheet
 from gaingoblin.widgets.dialog_utils import center_and_clamp_dialog
 
@@ -120,7 +125,7 @@ class ImportDialog(QDialog):
         intro.setObjectName("HelperText")
         intro.setWordWrap(True)
 
-        warning = QLabel("PDF and pasted imports are best-effort. Review before importing.")
+        warning = QLabel("PDF imports are best-effort. Transaction/activity rows are ignored. Review the preview before importing.")
         warning.setObjectName("HelperText")
         warning.setWordWrap(True)
 
@@ -150,6 +155,7 @@ class ImportDialog(QDialog):
         self.summary_label.setWordWrap(True)
 
         self.preview_table = QTableWidget(0, len(self.HEADERS))
+        self.preview_table.setObjectName("ImportPreviewTable")
         self.preview_table.setHorizontalHeaderLabels(self.HEADERS)
         self.preview_table.setAlternatingRowColors(True)
         self.preview_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -208,7 +214,7 @@ class ImportDialog(QDialog):
         self.path_edit.setText(self._source_path)
         if not rows:
             self.preview_rows = []
-            self._populate_preview_table("No likely holdings rows were found in the pasted text.")
+            self._populate_preview_table(NO_IMPORTABLE_HOLDINGS_MESSAGE)
             return
         self._rebuild_preview()
 
@@ -257,7 +263,7 @@ class ImportDialog(QDialog):
         self.path_edit.setText(str(path))
         if not self.raw_rows:
             self.preview_rows = []
-            self._populate_preview_table("No rows are ready to preview.")
+            self._populate_preview_table(NO_IMPORTABLE_HOLDINGS_MESSAGE)
             return
         self._rebuild_preview()
 
@@ -276,6 +282,8 @@ class ImportDialog(QDialog):
         skipped = len(self.preview_rows) - accepted
         if message is not None:
             self.summary_label.setText(message)
+        elif accepted == 0 and self.preview_rows:
+            self.summary_label.setText(NO_IMPORTABLE_HOLDINGS_MESSAGE)
         else:
             self.summary_label.setText(
                 f"Found {len(self.preview_rows)} rows. {accepted} ready to import, {skipped} skipped."
@@ -297,7 +305,17 @@ class ImportDialog(QDialog):
             ]
             for column, value in enumerate(values):
                 item = QTableWidgetItem(value)
+                self._style_preview_item(item, row.status)
                 if column in {0, 5, 6, 7}:
                     item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self.preview_table.setItem(row_index, column, item)
         self.preview_table.resizeColumnsToContents()
+
+    @staticmethod
+    def _style_preview_item(item: QTableWidgetItem, status: str) -> None:
+        if status == "accepted":
+            item.setBackground(QBrush(QColor("#263f20")))
+            item.setForeground(QBrush(QColor("#f3ead2")))
+        else:
+            item.setBackground(QBrush(QColor("#3a2d1f")))
+            item.setForeground(QBrush(QColor("#b7aa8a")))

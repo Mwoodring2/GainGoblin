@@ -62,6 +62,15 @@ def test_non_holding_pasted_lines_are_ignored() -> None:
     assert rows == []
 
 
+def test_pasted_activity_rows_are_ignored() -> None:
+    rows = read_pasted_text(
+        "Cash Div: R/D 06/01 P/D 06/15 4 shares at $0.11 Margin CDIV\n"
+        "Bought AAPL 2 shares at $150.00 order executed\n"
+    )
+
+    assert rows == []
+
+
 def test_duplicate_account_symbol_is_skipped_for_paste(tmp_path) -> None:
     repository = HoldingRepository(tmp_path / "gaingoblin.sqlite")
     rows = read_pasted_text(

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from gaingoblin.database import DEFAULT_ACCOUNT_NAME, HoldingRepository
 from gaingoblin.importers.column_mapper import build_column_mapping, parse_decimal
 from gaingoblin.importers.import_models import ImportPreviewRow, ImportResult, RawImportRow
 from gaingoblin.models import Holding
+
+logger = logging.getLogger(__name__)
 
 ACCEPTED = "accepted"
 SKIPPED = "skipped"
@@ -85,17 +88,25 @@ def import_preview_rows(
         imported += 1
 
     skipped += sum(1 for row in preview_rows if row.status == ACCEPTED) - imported
+    skipped_count = len(preview_rows) - imported
     batch_id = repository.record_import_batch(
         source_path=source_path,
         source_type=source_type,
         row_count=len(preview_rows),
         accepted_count=imported,
-        skipped_count=len(preview_rows) - imported,
+        skipped_count=skipped_count,
         notes="; ".join(messages[:10]),
+    )
+    logger.info(
+        "import_completed source_type=%s row_count=%s imported_count=%s skipped_count=%s",
+        source_type,
+        len(preview_rows),
+        imported,
+        skipped_count,
     )
     return ImportResult(
         imported_count=imported,
-        skipped_count=len(preview_rows) - imported,
+        skipped_count=skipped_count,
         messages=messages,
         batch_id=batch_id,
     )

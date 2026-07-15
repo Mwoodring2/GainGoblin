@@ -1,0 +1,5 @@
+{
+  "market_data_enabled": false,
+  "selected_provider": "Mock",
+  "cache_duration_minutes": 5
+}

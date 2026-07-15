@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from importlib.resources import files
 
 from PySide6.QtWidgets import QApplication
-
 
 GOBLIN_COLORS = {
     "bg": "#11140f",
@@ -34,26 +32,8 @@ def money_class_for_value(value: Decimal) -> str:
     return "PositiveMoney"
 
 
-def _asset_url(relative_path: str) -> str:
-    try:
-        path = files("gaingoblin").joinpath(relative_path)
-        return str(path).replace("\\", "/")
-    except (FileNotFoundError, ModuleNotFoundError):
-        return ""
-
-
-def _qss_url(relative_path: str) -> str:
-    path = _asset_url(relative_path)
-    return f'url("{path}")' if path else "none"
-
-
 def build_goblin_qss() -> str:
     c = GOBLIN_COLORS
-    center_panel = _qss_url("assets/clipboard_kit/center_panel.png")
-    summary_panel = _qss_url("assets/clipboard_kit/summary_panel.png")
-    table_panel = _qss_url("assets/clipboard_kit/table_panel.png")
-    primary_button = _qss_url("assets/clipboard_kit/primary_button.png")
-    secondary_button = _qss_url("assets/clipboard_kit/secondary_button_left.png")
     return f"""
     QMainWindow {{
         background-color: {c["bg"]};
@@ -77,50 +57,57 @@ def build_goblin_qss() -> str:
     }}
 
     QLabel#AppTitle {{
-        color: #9fca39;
-        font-size: 32px;
-        font-weight: 800;
+        color: #a6d942;
+        font-size: 30px;
+        font-weight: 850;
+        padding: 0 8px;
     }}
 
     QLabel#AppSubtitle {{
         color: {c["ink"]};
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 750;
     }}
 
-    QLabel#HelperText,
+    QLabel#HelperText {{
+        color: #c9b987;
+        font-size: 12px;
+    }}
+
     QLabel#CardSubtitle {{
-        color: #8f815f;
+        color: #75623e;
         font-size: 12px;
     }}
 
     QFrame#SummaryCard {{
-        border-image: {center_panel} 18 18 18 18 stretch stretch;
-        border-width: 18px;
+        background-color: rgba(232, 202, 150, 240);
+        border: 1px solid rgba(105, 78, 38, 220);
+        border-radius: 16px;
         color: {c["ink"]};
     }}
 
     QFrame#HeroProfitCard {{
-        border-image: {summary_panel} 18 18 18 18 stretch stretch;
-        border-width: 18px;
+        background-color: rgba(238, 207, 139, 245);
+        border: 2px solid rgba(147, 110, 39, 235);
+        border-radius: 16px;
         color: {c["ink"]};
     }}
 
     QLabel#CardTitle {{
         color: {c["ink"]};
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 750;
     }}
 
     QLabel#CardValue,
     QLabel#PositiveMoney,
     QLabel#NegativeMoney {{
         font-size: 22px;
-        font-weight: 700;
+        font-weight: 850;
     }}
 
     QLabel#PositiveMoney {{
-        color: #36570f;
+        color: #31560f;
     }}
 
     QLabel#NegativeMoney {{
@@ -128,41 +115,49 @@ def build_goblin_qss() -> str:
     }}
 
     QFrame#LedgerPanel {{
-        border-image: {table_panel} 22 22 22 22 stretch stretch;
-        border-width: 22px;
+        background-color: rgba(30, 24, 17, 235);
+        border: 1px solid #806338;
+        border-radius: 18px;
     }}
 
     QFrame#CompanionPanel {{
-        background-color: rgba(30, 25, 17, 40);
-        border: 0;
+        background-color: rgba(222, 190, 132, 230);
+        border: 1px solid #806338;
+        border-radius: 16px;
+    }}
+
+    QFrame#RangeResultsPanel {{
+        background-color: rgba(32, 40, 24, 220);
+        border: 1px solid #806338;
+        border-radius: 12px;
+        padding: 8px;
     }}
 
     QPushButton {{
         background-color: {c["green_dark"]};
         color: {c["text"]};
-        border: 1px solid {c["border"]};
-        border-radius: 10px;
+        border: 1px solid #6f8c3a;
+        border-radius: 8px;
         padding: 8px 12px;
-        font-weight: 700;
+        font-weight: 750;
     }}
 
     QPushButton#PrimaryActionButton {{
-        border-image: {primary_button} 12 18 12 18 stretch stretch;
-        border-width: 12px 18px;
-        color: #f8f0d1;
-        min-height: 22px;
+        background-color: #6c7f16;
+        color: #fff4c8;
+        border-color: #d3b64c;
     }}
 
     QPushButton#SecondaryActionButton {{
-        border-image: {secondary_button} 12 18 12 18 stretch stretch;
-        border-width: 12px 18px;
+        background-color: #2a241b;
         color: #f3ead2;
-        min-height: 22px;
+        border-color: #8d713b;
     }}
 
     QPushButton#DangerActionButton {{
-        background-color: #5c2d26;
-        border-color: #9f5d45;
+        background-color: #6b3329;
+        border-color: #b0664c;
+        color: #ffe6d8;
     }}
 
     QPushButton:hover {{
@@ -175,20 +170,27 @@ def build_goblin_qss() -> str:
     }}
 
     QPushButton:disabled {{
-        background-color: {c["panel"]};
-        color: {c["muted"]};
+        background-color: #211d17;
+        color: #8d8065;
+        border-color: #4f4432;
     }}
 
     QTableView,
     QTableWidget {{
-        background-color: rgba(25, 24, 20, 225);
-        alternate-background-color: rgba(40, 36, 28, 225);
-        color: {c["text"]};
-        gridline-color: {c["border"]};
-        border: 1px solid #5f4a2a;
+        background-color: #1b1a14;
+        alternate-background-color: #202519;
+        color: #f7efd7;
+        gridline-color: #40572e;
+        border: 1px solid #6c542f;
         border-radius: 8px;
         selection-background-color: {c["green_dark"]};
         selection-color: {c["text"]};
+    }}
+
+    QTableWidget#ImportPreviewTable {{
+        background-color: #191812;
+        alternate-background-color: #211f18;
+        gridline-color: #4c3d28;
     }}
 
     QHeaderView::section {{
@@ -197,18 +199,31 @@ def build_goblin_qss() -> str:
         border: 0px;
         border-right: 1px solid #5f4a2a;
         padding: 8px;
-        font-weight: 700;
+        font-weight: 800;
     }}
 
     QLineEdit,
     QDoubleSpinBox,
     QSpinBox,
+    QComboBox,
     QTextEdit {{
-        background-color: {c["panel"]};
+        background-color: #1b2118;
         color: {c["text"]};
         border: 1px solid {c["border"]};
         border-radius: 8px;
         padding: 6px;
+        selection-background-color: {c["green_dark"]};
+    }}
+
+    QComboBox::drop-down {{
+        border: 0;
+        width: 22px;
+    }}
+
+    QComboBox QAbstractItemView {{
+        background-color: {c["panel_alt"]};
+        color: {c["text"]};
+        border: 1px solid {c["border"]};
         selection-background-color: {c["green_dark"]};
     }}
 

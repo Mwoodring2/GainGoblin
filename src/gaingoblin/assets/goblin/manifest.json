@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "default_fps": 6,
+  "states": {
+    "idle": {
+      "frames": [
+        "idle/idle_000.png",
+        "idle/idle_001.png",
+        "idle/idle_002.png"
+      ],
+      "loop": true,
+      "fps": 4
+    },
+    "blink": {
+      "frames": [
+        "idle/idle_000.png",
+        "idle/idle_001.png"
+      ],
+      "loop": false,
+      "fps": 8,
+      "return_to": "idle"
+    },
+    "look_left": {
+      "frames": [
+        "idle/idle_000.png",
+        "idle/idle_002.png"
+      ],
+      "loop": false,
+      "fps": 6,
+      "return_to": "idle"
+    },
+    "look_right": {
+      "frames": [
+        "idle/idle_002.png",
+        "idle/idle_000.png"
+      ],
+      "loop": false,
+      "fps": 6,
+      "return_to": "idle"
+    },
+    "foot_tap": {
+      "frames": [
+        "thinking/thinking_000.png",
+        "thinking/thinking_001.png"
+      ],
+      "loop": false,
+      "fps": 7,
+      "return_to": "thinking"
+    },
+    "happy": {
+      "frames": [
+        "happy/happy_000.png",
+        "happy/happy_001.png",
+        "happy/happy_002.png"
+      ],
+      "loop": true,
+      "fps": 6
+    },
+    "happy_bounce": {
+      "frames": [
+        "happy/happy_000.png",
+        "happy/happy_001.png",
+        "happy/happy_002.png"
+      ],
+      "loop": false,
+      "fps": 10,
+      "return_to": "happy"
+    },
+    "greedy": {
+      "frames": [
+        "greedy/greedy_000.png",
+        "greedy/greedy_001.png",
+        "greedy/greedy_002.png"
+      ],
+      "loop": true,
+      "fps": 7
+    },
+    "coin_jiggle": {
+      "frames": [
+        "greedy/greedy_000.png",
+        "greedy/greedy_001.png",
+        "greedy/greedy_002.png"
+      ],
+      "loop": false,
+      "fps": 10,
+      "return_to": "greedy"
+    },
+    "greedy_sparkle": {
+      "frames": [
+        "greedy/greedy_000.png",
+        "greedy/greedy_001.png",
+        "greedy/greedy_002.png"
+      ],
+      "loop": false,
+      "fps": 10,
+      "return_to": "greedy"
+    },
+    "worried": {
+      "frames": [
+        "worried/worried_000.png",
+        "worried/worried_001.png"
+      ],
+      "loop": true,
+      "fps": 4
+    },
+    "worried_sweat": {
+      "frames": [
+        "worried/worried_000.png",
+        "worried/worried_001.png"
+      ],
+      "loop": false,
+      "fps": 6,
+      "return_to": "worried"
+    },
+    "thinking": {
+      "frames": [
+        "thinking/thinking_000.png",
+        "thinking/thinking_001.png"
+      ],
+      "loop": true,
+      "fps": 4
+    },
+    "thinking_tap": {
+      "frames": [
+        "thinking/thinking_000.png",
+        "thinking/thinking_001.png"
+      ],
+      "loop": false,
+      "fps": 7,
+      "return_to": "thinking"
+    },
+    "shoulder_bob": {
+      "frames": [
+        "happy/happy_000.png",
+        "happy/happy_001.png"
+      ],
+      "loop": false,
+      "fps": 7,
+      "return_to": "idle"
+    },
+    "import_success": {
+      "frames": [
+        "import_success/import_success_000.png",
+        "import_success/import_success_001.png"
+      ],
+      "loop": false,
+      "fps": 8,
+      "return_to": "happy"
+    },
+    "import_failed": {
+      "frames": [
+        "import_failed/import_failed_000.png",
+        "import_failed/import_failed_001.png"
+      ],
+      "loop": false,
+      "fps": 6,
+      "return_to": "worried"
+    },
+    "holding_added": {
+      "frames": [
+        "holding_added/holding_added_000.png",
+        "holding_added/holding_added_001.png"
+      ],
+      "loop": false,
+      "fps": 8,
+      "return_to": "happy"
+    },
+    "profit_up": {
+      "frames": [
+        "profit_up/profit_up_000.png",
+        "profit_up/profit_up_001.png"
+      ],
+      "loop": false,
+      "fps": 8,
+      "return_to": "happy"
+    },
+    "profit_down": {
+      "frames": [
+        "profit_down/profit_down_000.png",
+        "profit_down/profit_down_001.png"
+      ],
+      "loop": false,
+      "fps": 6,
+      "return_to": "worried"
+    },
+    "delete": {
+      "frames": [
+        "delete/delete_000.png",
+        "delete/delete_001.png"
+      ],
+      "loop": false,
+      "fps": 6,
+      "return_to": "thinking"
+    }
+  }
+}

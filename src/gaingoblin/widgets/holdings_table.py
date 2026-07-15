@@ -35,20 +35,39 @@ class HoldingsTable(QTableWidget):
         "ROI %": "projected profit / cost basis",
         "Goblin Note": "mood based on planned return",
     }
+    COLUMN_WIDTHS = {
+        "Account": 130,
+        "Symbol": 90,
+        "Shares": 120,
+        "Buy Price": 115,
+        "Buy Fees": 105,
+        "Target Sell": 120,
+        "Sell Fees": 105,
+        "Cost Basis": 125,
+        "Target Net": 125,
+        "Projected Profit": 145,
+        "ROI %": 90,
+        "Goblin Note": 190,
+        "Notes": 220,
+    }
 
     def __init__(self, parent=None) -> None:
         super().__init__(0, len(self.HEADERS), parent)
         self._holdings: list[Holding] = []
+        self.setObjectName("HoldingsLedger")
         self.setHorizontalHeaderLabels(self.HEADERS)
         self.setAlternatingRowColors(True)
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.verticalHeader().setVisible(False)
+        self.verticalHeader().setDefaultSectionSize(34)
         self.setSortingEnabled(True)
         header = self.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        header.setMinimumSectionSize(80)
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         header.setStretchLastSection(True)
+        self._apply_column_widths()
         for column, title in enumerate(self.HEADERS):
             item = self.horizontalHeaderItem(column)
             if item is not None and title in self.TOOL_TIPS:
@@ -87,6 +106,7 @@ class HoldingsTable(QTableWidget):
                 if self.HEADERS[column] in self.TOOL_TIPS:
                     item.setToolTip(self.TOOL_TIPS[self.HEADERS[column]])
                 self.setItem(row, column, item)
+        self._apply_column_widths()
         self.setSortingEnabled(True)
 
     def selected_holding(self) -> Holding | None:
@@ -100,6 +120,12 @@ class HoldingsTable(QTableWidget):
         holding = item.data(Qt.ItemDataRole.UserRole)
         return holding if isinstance(holding, Holding) else None
 
+    def _apply_column_widths(self) -> None:
+        for column, title in enumerate(self.HEADERS):
+            width = self.COLUMN_WIDTHS.get(title)
+            if width is not None:
+                self.setColumnWidth(column, width)
+
     def _style_item(
         self,
         item: QTableWidgetItem,
@@ -107,7 +133,7 @@ class HoldingsTable(QTableWidget):
         projected_profit: Decimal,
         target_sell_price: Decimal,
     ) -> None:
-        if column == 9:
+        if column in {9, 10}:
             font = QFont(item.font())
             font.setBold(True)
             item.setFont(font)

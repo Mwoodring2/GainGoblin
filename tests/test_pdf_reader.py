@@ -2,7 +2,12 @@ from decimal import Decimal
 
 from gaingoblin.database import HoldingRepository
 from gaingoblin.importers.holdings_importer import create_import_preview, import_preview_rows
-from gaingoblin.importers.pdf_reader import IMAGE_ONLY_MESSAGE, read_pdf
+from gaingoblin.importers.pdf_reader import (
+    IMAGE_ONLY_MESSAGE,
+    NO_HOLDINGS_SECTION_MESSAGE,
+    NO_IMPORTABLE_HOLDINGS_MESSAGE,
+    read_pdf,
+)
 
 
 def test_pdf_text_extraction_returns_raw_rows(tmp_path) -> None:
@@ -37,7 +42,7 @@ def test_empty_or_image_only_pdf_returns_helpful_message(tmp_path) -> None:
 
 def test_pdf_import_batch_records_source_type_pdf(tmp_path) -> None:
     path = tmp_path / "statement.pdf"
-    write_text_pdf(path, ["AAPL Apple Inc. 10 shares Average cost $150.00"])
+    write_text_pdf(path, ["Positions", "AAPL Apple Inc. 10 shares Average cost $150.00"])
     repository = HoldingRepository(tmp_path / "gaingoblin.sqlite")
     preview = create_import_preview(read_pdf(path).rows, repository)
 
@@ -45,6 +50,50 @@ def test_pdf_import_batch_records_source_type_pdf(tmp_path) -> None:
 
     assert result.imported_count == 1
     assert repository.list_import_batches()[0].source_type == "pdf"
+
+
+def test_pdf_with_only_activity_rows_returns_no_holdings_section_message(tmp_path) -> None:
+    path = tmp_path / "activity.pdf"
+    write_text_pdf(
+        path,
+        [
+            "Account Activity",
+            "Cash Div: R/D 06/01 P/D 06/15 4 shares at $0.11 Margin CDIV",
+            "ACH deposit pending",
+        ],
+    )
+
+    result = read_pdf(path)
+
+    assert result.rows == []
+    assert result.message == NO_HOLDINGS_SECTION_MESSAGE
+
+
+def test_pdf_holdings_section_ignores_activity_rows(tmp_path) -> None:
+    path = tmp_path / "mixed.pdf"
+    write_text_pdf(
+        path,
+        [
+            "Holdings",
+            "Cash Div: R/D 06/01 P/D 06/15 4 shares at $0.11 Margin CDIV",
+            "AAPL Apple Inc. 10 shares Average cost $150.00",
+        ],
+    )
+
+    result = read_pdf(path)
+
+    assert len(result.rows) == 1
+    assert result.rows[0].values["Ticker"] == "AAPL"
+
+
+def test_pdf_holdings_section_without_importable_rows_has_stronger_message(tmp_path) -> None:
+    path = tmp_path / "empty_holdings.pdf"
+    write_text_pdf(path, ["Holdings", "Cash Div: R/D 06/01 P/D 06/15 CDIV"])
+
+    result = read_pdf(path)
+
+    assert result.rows == []
+    assert result.message == NO_IMPORTABLE_HOLDINGS_MESSAGE
 
 
 def write_text_pdf(path, lines: list[str]) -> None:

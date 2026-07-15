@@ -5,6 +5,7 @@ from decimal import Decimal
 from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QVBoxLayout, QWidget
 
 from gaingoblin.theme import money_class_for_value
+from gaingoblin.ui.breakpoints import LayoutBreakpoint, breakpoint_for_size
 
 
 class SummaryCards(QWidget):
@@ -13,6 +14,7 @@ class SummaryCards(QWidget):
         self._value_labels: dict[str, QLabel] = {}
         self._cards: list[QFrame] = []
         self._columns = 0
+        self._breakpoint: LayoutBreakpoint | None = None
 
         self._layout = QGridLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
@@ -39,7 +41,7 @@ class SummaryCards(QWidget):
             subtitle_label.setObjectName("CardSubtitle")
 
             card_layout = QVBoxLayout(card)
-            card_layout.setContentsMargins(14, 10, 14, 10)
+            card_layout.setContentsMargins(16, 12, 16, 12)
             card_layout.setSpacing(3)
             card_layout.addWidget(title_label)
             card_layout.addWidget(value_label)
@@ -48,7 +50,7 @@ class SummaryCards(QWidget):
             self._value_labels[key] = value_label
             self._cards.append(card)
 
-        self._reflow(force=True)
+        self.set_breakpoint(breakpoint_for_size(1200, 800))
         self.update_summary(
             {
                 "total_cost_basis": Decimal("0"),
@@ -60,7 +62,17 @@ class SummaryCards(QWidget):
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
-        self._reflow()
+        if self._breakpoint is None:
+            self._reflow(2 if self.width() < 860 else 4)
+
+    def set_breakpoint(self, breakpoint: LayoutBreakpoint) -> None:
+        self._breakpoint = breakpoint
+        compact_height = 78 if breakpoint.compact else 96
+        for card in self._cards:
+            card.setMinimumHeight(compact_height)
+        self._layout.setHorizontalSpacing(8 if breakpoint.compact else 12)
+        self._layout.setVerticalSpacing(8)
+        self._reflow(breakpoint.summary_columns)
 
     def update_summary(self, summary: dict[str, Decimal]) -> None:
         values: dict[str, tuple[Decimal, str]] = {
@@ -85,10 +97,8 @@ class SummaryCards(QWidget):
             value_label.style().unpolish(value_label)
             value_label.style().polish(value_label)
 
-    def _reflow(self, force: bool = False) -> None:
-        width = self.width()
-        columns = 4 if width == 0 or width >= 860 else 2
-        if not force and columns == self._columns:
+    def _reflow(self, columns: int) -> None:
+        if columns == self._columns:
             return
 
         self._columns = columns

@@ -31,8 +31,9 @@ class HoldingDialog(QDialog):
         self.setWindowTitle("Edit Treasure Entry" if holding else "Add Treasure to the Hoard")
         self.setModal(True)
         self.setSizeGripEnabled(True)
-        self.resize(520, 560)
-        self.setMinimumSize(420, 420)
+        self.resize(600, 560)
+        self.setMinimumSize(460, 420)
+        self.setMaximumWidth(720)
 
         self.symbol_name = QLineEdit()
         self.shares = MoneyEdit(6)
@@ -41,14 +42,17 @@ class HoldingDialog(QDialog):
         self.target_sell_price = MoneyEdit(4)
         self.sell_fees = MoneyEdit(4)
         self.notes = QTextEdit()
-        self.notes.setMinimumHeight(140)
+        self.notes.setMinimumHeight(92)
+        self.notes.setMaximumHeight(150)
         helper = QLabel("Goblin wants an exit number. You can change it later.")
         helper.setObjectName("HelperText")
         helper.setWordWrap(True)
 
         form_host = QWidget()
+        form_host.setMaximumWidth(640)
         form = QFormLayout(form_host)
         form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         form.addRow("Symbol / Name", self.symbol_name)
         form.addRow("Shares", self.shares)
         form.addRow("Buy Price", self.buy_price)
@@ -58,9 +62,14 @@ class HoldingDialog(QDialog):
         form.addRow("Sell Fees", self.sell_fees)
         form.addRow("Notes", self.notes)
 
+        form_shell = QWidget()
+        form_shell_layout = QVBoxLayout(form_shell)
+        form_shell_layout.setContentsMargins(0, 0, 0, 0)
+        form_shell_layout.addWidget(form_host, alignment=Qt.AlignmentFlag.AlignHCenter)
+
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setWidget(form_host)
+        scroll.setWidget(form_shell)
         scroll.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.buttons = QDialogButtonBox(

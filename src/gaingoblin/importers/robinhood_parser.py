@@ -16,6 +16,26 @@ CANONICAL_EXPORT_HEADERS = {
     "notes": "Notes",
 }
 
+HOLDINGS_SECTION_HEADINGS = (
+    "holdings",
+    "positions",
+    "portfolio holdings",
+    "account holdings",
+    "equities",
+    "stocks",
+    "securities held",
+)
+STOP_SECTION_HEADINGS = (
+    "account activity",
+    "activity",
+    "history",
+    "transactions",
+    "dividends",
+    "cash management",
+    "margin",
+    "disclosures",
+)
+
 _TICKER_RE = re.compile(r"\b[A-Z]{1,6}(?:\.[A-Z])?\b")
 _SHARES_RE = re.compile(
     r"(?:(?:shares?|quantity|qty|position|units)\s*:?\s*)"
@@ -33,27 +53,64 @@ _PRICE_LABEL_RE = re.compile(
 _ACCOUNT_RE = re.compile(r"\b(?:account|portfolio)\s*:?\s*(.+)", re.IGNORECASE)
 _IGNORE_SYMBOLS = {
     "ACCOUNT",
+    "ACH",
+    "ATM",
     "AVERAGE",
     "AVG",
     "BALANCE",
     "BUY",
+    "CASH",
+    "CDIV",
     "COST",
     "CURRENT",
+    "D",
     "DESCRIPTION",
+    "DIV",
     "EQUITY",
     "GAIN",
     "HOLDINGS",
+    "IRA",
     "LOSS",
+    "MARGIN",
     "MARKET",
     "NAME",
+    "P",
     "PORTFOLIO",
     "PRICE",
     "QUANTITY",
+    "R",
     "SHARES",
     "SYMBOL",
     "TOTAL",
+    "USD",
     "VALUE",
 }
+_ACTIVITY_TERMS = (
+    "cash div",
+    "cdiv",
+    "r/d",
+    "p/d",
+    "dividend",
+    "interest",
+    "margin interest",
+    "transfer",
+    "deposit",
+    "withdrawal",
+    "cash sweep",
+    "fee",
+    "reversal",
+    "journal",
+    "bought",
+    "sold",
+    "order",
+    "executed",
+    "trade confirmation",
+    "pending",
+    "canceled",
+    "cancelled",
+    "assigned",
+    "expired",
+)
 
 
 def parse_tabular_text(text: str) -> list[RawImportRow]:
@@ -74,6 +131,8 @@ def parse_tabular_text(text: str) -> list[RawImportRow]:
     results: list[RawImportRow] = []
     for row_number, values in enumerate(rows[1:], start=2):
         if not any(value.strip() for value in values):
+            continue
+        if is_activity_or_transaction_line(" ".join(values)):
             continue
         padded = values + [""] * max(0, len(headers) - len(values))
         row_values = {
@@ -109,6 +168,42 @@ def parse_robinhood_text(text: str) -> list[RawImportRow]:
     return line_rows
 
 
+def extract_holdings_section_text(text: str) -> str | None:
+    selected: list[str] = []
+    collecting = False
+    found_section = False
+
+    for line in _non_empty_lines(text):
+        if _is_holdings_section_heading(line):
+            collecting = True
+            found_section = True
+            selected.append(line)
+            continue
+        if _is_stop_section_heading(line):
+            collecting = False
+            continue
+        if collecting:
+            selected.append(line)
+
+    if not found_section:
+        return None
+    return "\n".join(selected).strip()
+
+
+def is_activity_or_transaction_line(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text.strip().lower())
+    if not normalized:
+        return False
+
+    for term in _ACTIVITY_TERMS:
+        if "/" in term or " " in term:
+            if term in normalized:
+                return True
+        elif re.search(rf"\b{re.escape(term)}\b", normalized):
+            return True
+    return False
+
+
 def raw_row_from_detected_values(
     row_number: int,
     *,
@@ -130,14 +225,15 @@ def raw_row_from_detected_values(
 
 
 def _parse_block(row_number: int, block_lines: list[str]) -> RawImportRow | None:
-    original = " | ".join(line.strip() for line in block_lines if line.strip())
-    if not original:
+    clean_lines = [line.strip() for line in block_lines if line.strip()]
+    original = " | ".join(clean_lines)
+    if not original or is_activity_or_transaction_line(original):
         return None
 
     symbol = _find_symbol(original)
     shares = _find_shares(original)
     buy_price = _find_buy_price(original)
-    account_name = _find_account_name(block_lines)
+    account_name = _find_account_name(clean_lines)
 
     if symbol is None:
         return None
@@ -157,6 +253,11 @@ def _parse_block(row_number: int, block_lines: list[str]) -> RawImportRow | None
 def _find_symbol(text: str) -> str | None:
     for match in _TICKER_RE.finditer(text):
         value = match.group(0).upper()
+        start, end = match.span()
+        previous_char = text[start - 1] if start > 0 else ""
+        next_char = text[end] if end < len(text) else ""
+        if previous_char == "/" or next_char == "/":
+            continue
         if value not in _IGNORE_SYMBOLS and not value.isdigit():
             return value
     return None
@@ -219,6 +320,24 @@ def _split_rows(lines: list[str], delimiter: str | None) -> list[list[str]]:
     if delimiter == "\t":
         return [[cell.strip() for cell in line.split("\t")] for line in lines]
     return [[cell.strip() for cell in re.split(r"\s{2,}", line.strip())] for line in lines]
+
+
+def _is_holdings_section_heading(line: str) -> bool:
+    normalized = _normalize_heading(line)
+    if len(normalized.split()) > 5:
+        return False
+    return any(term in normalized for term in HOLDINGS_SECTION_HEADINGS)
+
+
+def _is_stop_section_heading(line: str) -> bool:
+    normalized = _normalize_heading(line)
+    if len(normalized.split()) > 5:
+        return False
+    return any(term == normalized or normalized.startswith(term) for term in STOP_SECTION_HEADINGS)
+
+
+def _normalize_heading(line: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9& ]+", " ", line.lower())).strip()
 
 
 def _clean_number(value: str) -> str:
