@@ -17,10 +17,10 @@ from PySide6.QtWidgets import (
     QFrame,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QSizePolicy,
-    QSpinBox,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -28,20 +28,18 @@ from PySide6.QtWidgets import (
 
 from gaingoblin.calculations import to_decimal
 from gaingoblin.market_data.cache import MarketDataCache
-from gaingoblin.market_data.errors import MarketDataDisabledError, MarketDataError
+from gaingoblin.market_data.errors import (
+    MarketDataDisabledError,
+    MarketDataError,
+    MissingApiKeyError,
+)
 from gaingoblin.market_data.historical_range import calculate_historical_range_metrics
 from gaingoblin.market_data.models import HistoricalRangeMetrics, MarketDataQuote
 from gaingoblin.market_data.provider_base import MarketDataProvider
 from gaingoblin.market_data.providers.alpha_vantage_provider import AlphaVantageProvider
 from gaingoblin.market_data.providers.mock_provider import MockProvider
-from gaingoblin.market_data.providers.nasdaq_data_link_provider import NasdaqDataLinkProvider
-from gaingoblin.market_data.providers.polygon_provider import PolygonProvider
 from gaingoblin.market_data.secret_store import MemorySecretStore, SecretStore
-from gaingoblin.market_data.settings import (
-    MASKED_API_KEY_PLACEHOLDER,
-    MarketDataSettings,
-    MarketDataSettingsStore,
-)
+from gaingoblin.market_data.settings import MarketDataSettings, MarketDataSettingsStore
 from gaingoblin.models import Holding
 from gaingoblin.range_calculator import (
     RangeScenarioInput,
@@ -50,6 +48,10 @@ from gaingoblin.range_calculator import (
 )
 from gaingoblin.widgets.dialog_utils import center_and_clamp_dialog
 from gaingoblin.widgets.holding_dialog import MoneyEdit
+from gaingoblin.widgets.market_data_settings_dialog import (
+    ALPHA_VANTAGE,
+    MarketDataSettingsDialog,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -127,10 +129,14 @@ class RangeCalculatorDialog(QDialog):
 
     PROVIDER_CLASSES = {
         "Mock": MockProvider,
-        "Alpha Vantage": AlphaVantageProvider,
-        "Polygon": PolygonProvider,
-        "Nasdaq Data Link": NasdaqDataLinkProvider,
+        ALPHA_VANTAGE: AlphaVantageProvider,
     }
+
+    SETUP_ONBOARDING_MESSAGE = (
+        "Market Data Scout needs a quick setup first. "
+        "Open Market Data Settings to save an Alpha Vantage API key and enable online data. "
+        "Your calculator numbers stay exactly as you left them."
+    )
 
     def __init__(
         self,
@@ -164,10 +170,10 @@ class RangeCalculatorDialog(QDialog):
         self.last_result: RangeScenarioResult | None = None
         self.last_metrics: HistoricalRangeMetrics | None = None
         self.last_quote: MarketDataQuote | None = None
-        self._has_stored_api_key = False
         self._fetch_thread: QThread | None = None
         self._fetch_worker: _FetchWorker | None = None
         self._fetch_in_progress = False
+        self._setup_offer_pending = False
 
         self.setWindowTitle("Range Profit Calculator")
         self.setModal(True)
@@ -231,28 +237,23 @@ class RangeCalculatorDialog(QDialog):
         self.scout_panel.setObjectName("RangeResultsPanel")
         scout_layout = QFormLayout(self.scout_panel)
         scout_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+
+        # Hidden checkbox keeps enablement state for fetch / existing tests.
         self.online_enabled = QCheckBox("Enable Market Data Scout")
         self.online_enabled.setChecked(self.settings.market_data_enabled)
-        self.provider_combo = QComboBox()
-        provider_names = (
-            [self.injected_provider.provider_name]
-            if self.injected_provider
-            else list(self.PROVIDER_CLASSES)
-        )
-        self.provider_combo.addItems(provider_names)
-        if self.settings.selected_provider in provider_names:
-            self.provider_combo.setCurrentText(self.settings.selected_provider)
-        self.provider_combo.currentTextChanged.connect(self._refresh_api_key_field)
+        self.online_enabled.hide()
+
+        self.setup_status_label = QLabel(self._setup_status_text())
+        self.setup_status_label.setObjectName("HelperText")
+        self.setup_status_label.setWordWrap(True)
+        self.provider_value = QLabel(self._active_provider_name())
+        self.online_value = QLabel(self._online_status_text())
         self.lookback_combo = QComboBox()
         for label, value in self.LOOKBACK_WINDOWS:
             self.lookback_combo.addItem(label, value)
         self.lookback_combo.setCurrentIndex(2)
-        self.api_key_edit = QLineEdit()
-        self.api_key_edit.setEchoMode(QLineEdit.EchoMode.Password)
-        self.api_key_edit.setPlaceholderText("API key, if provider requires one")
-        self.cache_minutes = QSpinBox()
-        self.cache_minutes.setRange(1, 10080)
-        self.cache_minutes.setValue(self.settings.cache_duration_minutes)
+        self.open_settings_button = QPushButton("Open Market Data Settings")
+        self.open_settings_button.clicked.connect(self.open_market_data_settings)
         self.fetch_button = QPushButton("Fetch Market Numbers")
         self.fetch_button.clicked.connect(self.start_market_data_fetch)
         self.use_average_button = QPushButton("Use Average High/Low")
@@ -260,8 +261,6 @@ class RangeCalculatorDialog(QDialog):
         self.use_average_button.clicked.connect(self.use_average_high_low)
         self.clear_fetch_button = QPushButton("Clear Fetched Data")
         self.clear_fetch_button.clicked.connect(self.clear_fetched_values)
-        self.clear_api_key_button = QPushButton("Clear Saved API Key")
-        self.clear_api_key_button.clicked.connect(self.clear_saved_api_key)
         self.source_value = QLabel("Not fetched")
         self.fetched_value = QLabel("Not fetched")
         self.freshness_value = QLabel("unknown")
@@ -272,24 +271,23 @@ class RangeCalculatorDialog(QDialog):
         self.market_warning.setObjectName("HelperText")
         self.market_warning.setWordWrap(True)
         self.historical_warning = self.market_warning
+
         scout_layout.addRow("", QLabel("Market Data Scout"))
         scout_layout.addRow("Symbol", QLabel("Uses Ticker / Symbol field above"))
-        scout_layout.addRow("", self.online_enabled)
-        scout_layout.addRow("Provider", self.provider_combo)
+        scout_layout.addRow("Setup", self.setup_status_label)
+        scout_layout.addRow("Provider", self.provider_value)
+        scout_layout.addRow("Online Data", self.online_value)
         scout_layout.addRow("Lookback Window", self.lookback_combo)
-        scout_layout.addRow("API Key", self.api_key_edit)
-        scout_layout.addRow("Quote Cache (minutes)", self.cache_minutes)
         scout_layout.addRow("Data Source", self.source_value)
         scout_layout.addRow("Fetched Timestamp", self.fetched_value)
         scout_layout.addRow("Freshness", self.freshness_value)
         scout_layout.addRow("Lookback Period", self.lookback_value)
         scout_layout.addRow("Cached Status", self.cache_status_value)
+        scout_layout.addRow("", self.open_settings_button)
         scout_layout.addRow("", self.fetch_button)
         scout_layout.addRow("", self.use_average_button)
         scout_layout.addRow("", self.clear_fetch_button)
-        scout_layout.addRow("", self.clear_api_key_button)
         scout_layout.addRow("", self.market_warning)
-
         self.results_panel = QFrame()
         self.results_panel.setObjectName("RangeResultsPanel")
         self.result_labels: dict[str, QLabel] = {}
@@ -332,7 +330,7 @@ class RangeCalculatorDialog(QDialog):
         layout.addWidget(self.scroll_area)
         layout.addWidget(self.buttons)
 
-        self._refresh_api_key_field()
+        self._refresh_setup_labels()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -400,8 +398,11 @@ class RangeCalculatorDialog(QDialog):
             self.fetch_failed.emit()
             return
 
+        if not self._ensure_setup_ready(offer_dialog=True):
+            self.fetch_failed.emit()
+            return
+
         try:
-            self._save_market_data_settings()
             request = self._build_fetch_request()
         except Exception:
             logger.exception("Failed to prepare market-data fetch")
@@ -430,8 +431,10 @@ class RangeCalculatorDialog(QDialog):
     def fetch_market_numbers(self) -> HistoricalRangeMetrics | None:
         """Synchronous scout used by tests and the background worker."""
         self.fetch_started.emit()
+        if not self._ensure_setup_ready(offer_dialog=False):
+            self.fetch_failed.emit()
+            return None
         try:
-            self._save_market_data_settings()
             request = self._build_fetch_request()
         except Exception:
             logger.exception("Failed to prepare market-data fetch")
@@ -447,8 +450,99 @@ class RangeCalculatorDialog(QDialog):
             lookback_days=int(self.lookback_combo.currentData() or 90),
             online_enabled=self.online_enabled.isChecked(),
             provider=self._current_provider(),
-            quote_cache_minutes=self.cache_minutes.value(),
+            quote_cache_minutes=self.settings.cache_duration_minutes,
         )
+
+    def open_market_data_settings(self) -> bool:
+        """Open guided Market Data Settings and refresh local labels afterward."""
+        if self.injected_provider is not None:
+            self.status_label.setText(
+                "A test market-data provider is active. Settings dialog is available for production path only."
+            )
+            return False
+        dialog = MarketDataSettingsDialog(
+            parent=self,
+            settings_store=self.settings_store,
+            secret_store=self.secret_store,
+            market_data_cache=self.market_data_cache,
+            test_symbol=self.symbol_name.text().strip().upper() or "IBM",
+        )
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        self._reload_settings_from_store()
+        self._refresh_setup_labels()
+        if accepted:
+            self.status_label.setText(
+                "Market Data Settings updated. Click Fetch Market Numbers when you are ready."
+            )
+        return accepted
+
+    def _ensure_setup_ready(self, *, offer_dialog: bool) -> bool:
+        ready, reason = self._setup_readiness()
+        if ready:
+            return True
+        self.status_label.setText(reason)
+        self._setup_offer_pending = True
+        self._refresh_setup_labels()
+        if offer_dialog:
+            answer = QMessageBox.question(
+                self,
+                "Market Data Setup Needed",
+                f"{self.SETUP_ONBOARDING_MESSAGE}\n\nOpen Market Data Settings now?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
+            )
+            if answer == QMessageBox.StandardButton.Yes:
+                self.open_market_data_settings()
+        return False
+
+    def _setup_readiness(self) -> tuple[bool, str]:
+        if self.injected_provider is not None:
+            return True, ""
+        self._reload_settings_from_store()
+        if not self.settings.market_data_enabled:
+            return False, self.SETUP_ONBOARDING_MESSAGE
+        provider_name = self._active_provider_name()
+        if provider_name not in self.PROVIDER_CLASSES:
+            return False, self.SETUP_ONBOARDING_MESSAGE
+        provider_class = self.PROVIDER_CLASSES[provider_name]
+        if provider_class.requires_api_key and not self.secret_store.get_secret(provider_name):
+            return False, self.SETUP_ONBOARDING_MESSAGE
+        return True, ""
+
+    def _reload_settings_from_store(self) -> None:
+        if self.injected_provider is not None:
+            return
+        self.settings = self.settings_store.load()
+        if self.settings.selected_provider not in self.PROVIDER_CLASSES:
+            self.settings = MarketDataSettings(
+                market_data_enabled=self.settings.market_data_enabled,
+                selected_provider=ALPHA_VANTAGE,
+                cache_duration_minutes=self.settings.cache_duration_minutes,
+            )
+        self.online_enabled.setChecked(self.settings.market_data_enabled)
+        self.market_data_cache.quote_ttl = timedelta(minutes=self.settings.cache_duration_minutes)
+
+    def _refresh_setup_labels(self) -> None:
+        self.setup_status_label.setText(self._setup_status_text())
+        self.provider_value.setText(self._active_provider_name())
+        self.online_value.setText(self._online_status_text())
+
+    def _setup_status_text(self) -> str:
+        ready, _reason = self._setup_readiness()
+        if ready:
+            return "Ready"
+        return "Setup needed — open Market Data Settings"
+
+    def _online_status_text(self) -> str:
+        return "Enabled" if self.settings.market_data_enabled else "Disabled (default)"
+
+    def _active_provider_name(self) -> str:
+        if self.injected_provider is not None:
+            return self.injected_provider.provider_name
+        name = self.settings.selected_provider
+        if name not in self.PROVIDER_CLASSES:
+            return ALPHA_VANTAGE
+        return name
 
     def use_average_high_low(self) -> None:
         if self.last_metrics is None:
@@ -477,21 +571,6 @@ class RangeCalculatorDialog(QDialog):
         self.lookback_value.setText("Not fetched")
         self.cache_status_value.setText("Not fetched")
         self.status_label.setText("Fetched data cleared. Manual entry remains available.")
-
-    def clear_saved_api_key(self) -> None:
-        provider_name = self.provider_combo.currentText()
-        try:
-            self.secret_store.delete_secret(provider_name)
-        except Exception:
-            logger.exception("Failed to clear saved API key provider=%s", provider_name)
-            self.status_label.setText("Could not clear the saved API key from the credential store.")
-            return
-        self._has_stored_api_key = False
-        self.api_key_edit.clear()
-        self.api_key_edit.setPlaceholderText("API key, if provider requires one")
-        self._save_market_data_settings(persist_typed_key=False)
-        self.status_label.setText("Saved market data API key cleared from the credential store.")
-        logger.info("cleared_saved_api_key provider=%s", provider_name)
 
     def copy_result_summary(self) -> None:
         if self.last_result is None:
@@ -682,48 +761,12 @@ class RangeCalculatorDialog(QDialog):
     def _current_provider(self) -> MarketDataProvider:
         if self.injected_provider is not None:
             return self.injected_provider
-        provider_name = self.provider_combo.currentText()
-        provider_class = self.PROVIDER_CLASSES.get(provider_name, MockProvider)
-        return provider_class(api_key=self._resolve_api_key(provider_name))
-
-    def _resolve_api_key(self, provider_name: str) -> str:
-        typed = self.api_key_edit.text().strip()
-        if typed and typed != MASKED_API_KEY_PLACEHOLDER:
-            return typed
-        stored = self.secret_store.get_secret(provider_name)
-        return stored or ""
-
-    def _refresh_api_key_field(self, *_args: object) -> None:
-        provider_name = self.provider_combo.currentText()
-        stored = self.secret_store.get_secret(provider_name)
-        self._has_stored_api_key = bool(stored)
-        self.api_key_edit.clear()
-        if self._has_stored_api_key:
-            self.api_key_edit.setPlaceholderText(MASKED_API_KEY_PLACEHOLDER)
-        else:
-            self.api_key_edit.setPlaceholderText("API key, if provider requires one")
-
-    def _save_market_data_settings(self, *, persist_typed_key: bool = True) -> None:
-        if self.injected_provider is not None:
-            return
-        provider_name = self.provider_combo.currentText()
-        if persist_typed_key:
-            typed = self.api_key_edit.text().strip()
-            if typed and typed != MASKED_API_KEY_PLACEHOLDER:
-                try:
-                    self.secret_store.set_secret(provider_name, typed)
-                    self._has_stored_api_key = True
-                    self.api_key_edit.clear()
-                    self.api_key_edit.setPlaceholderText(MASKED_API_KEY_PLACEHOLDER)
-                except Exception:
-                    logger.exception("Failed to persist API key provider=%s", provider_name)
-                    raise
-        settings = MarketDataSettings(
-            market_data_enabled=self.online_enabled.isChecked(),
-            selected_provider=provider_name,
-            cache_duration_minutes=self.cache_minutes.value(),
-        )
-        self.settings_store.save(settings)
+        provider_name = self._active_provider_name()
+        provider_class = self.PROVIDER_CLASSES.get(provider_name, AlphaVantageProvider)
+        api_key = self.secret_store.get_secret(provider_name) or ""
+        if provider_class.requires_api_key and not api_key:
+            raise MissingApiKeyError()
+        return provider_class(api_key=api_key)
 
     def _apply_market_data(
         self,

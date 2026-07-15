@@ -22,7 +22,7 @@ from gaingoblin.market_data.errors import (
 logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT_SECONDS = 15.0
-USER_AGENT = "GainGoblin/0.1.8-alpha (+https://github.com/local/GainGoblin)"
+USER_AGENT = "GainGoblin/0.1.9-alpha (+https://github.com/local/GainGoblin)"
 
 
 def get_json(

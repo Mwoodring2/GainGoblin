@@ -21,7 +21,7 @@ def test_range_calculator_dialog_has_responsive_pinned_button_layout() -> None:
     assert dialog.fetch_button.text() == "Fetch Market Numbers"
     assert dialog.use_average_button.text() == "Use Average High/Low"
     assert dialog.clear_fetch_button.text() == "Clear Fetched Data"
-    assert dialog.clear_api_key_button.text() == "Clear Saved API Key"
+    assert dialog.open_settings_button.text() == "Open Market Data Settings"
     assert dialog.market_warning.text() == MARKET_DATA_WARNING
 
     dialog.close()

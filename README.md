@@ -10,7 +10,8 @@ or selling. All fetched values remain reviewable and editable before use.
 
 - Manual holding entry and editing
 - Range Profit Calculator for manually entered high/low scenario math
-- Optional Market Data Scout with Mock demo data and a working Alpha Vantage provider
+- Optional Market Data Scout with guided Alpha Vantage setup UX
+- Market Data Settings dialog (masked key, Test Connection, clear cache/key)
 - Summary cards for total cost basis, target net value, projected profit, and ROI
 - Animated lower-right goblin companion with portfolio reactions
 - Clipboard-and-parchment art shell for the Gain Goblin workspace
@@ -148,23 +149,35 @@ Gain Goblin can optionally use provider-based market-data connections for the
 Range Profit Calculator. Online data is disabled by default. Manual range math
 still works with no provider configured.
 
-Provider status in v0.1.8-alpha:
+### Setup (v0.1.9-alpha)
 
-- Mock — fully working local demo values (no API key)
+1. Open the Range Profit Calculator.
+2. Click **Open Market Data Settings** (or click **Fetch Market Numbers** when
+   setup is missing and choose to open settings).
+3. Paste an Alpha Vantage API key and click **Save Key** (stored in the OS
+   credential store; never written to JSON).
+4. Click **Test Connection** (uses a harmless symbol such as IBM).
+5. Enable Online Market Data and click **Save**.
+6. Return to the Range Calculator and click **Fetch Market Numbers**.
+7. Review and edit any fetched values, then Calculate.
+
+Provider status in v0.1.9-alpha:
+
 - Alpha Vantage — fully working online quotes and daily historical bars (API key required)
-- Polygon — placeholder / unavailable
-- Nasdaq Data Link — placeholder / unavailable
+- Mock — available for local injected demos/tests (no API key)
+- Polygon / Massive — Coming Later (not selectable)
+- Nasdaq Data Link — Coming Later (not selectable)
 
 API keys are stored through the operating-system credential store, shown only as
-a masked placeholder after saving, and can be cleared from the dialog. Keys are
-never written to `data/*.json`.
+a masked placeholder after saving, and can be cleared from Market Data Settings
+with confirmation. Keys are never written to `data/*.json`.
 
 Market Data Scout can fetch a quote when a provider supports it, calculate
 historical average high/low metrics from daily bars, show source, fetched
 timestamp, freshness, lookback period, and cache status, and place fetched
 values into editable Range Calculator fields. Quote cache TTL is configurable
 and defaults to five minutes. Historical daily bars use a 24-hour local cache.
-Network fetches run off the UI thread.
+Network fetches and connection tests run off the UI thread.
 
 Market values may be historical, delayed, end-of-day, or real-time depending on
 the provider and account plan. They are not predictions or recommendations.
@@ -243,4 +256,21 @@ brokerage pages.
 - Added safe rotating logs under `logs/` with credential redaction
 - Added GitHub Actions CI with Ruff and pytest on Python 3.11 and 3.12
 - Updated Range Calculator fetch flow to populate quote, average high/low, range extremes, and volume fields while keeping every value editable
+- Kept online market data optional, disabled by default, and free of brokerage sync or trading controls
+
+Release lock note:
+
+- Tag `v0.1.8-alpha` points to commit `45bef4c` (product release)
+- `main` later moved to `06baa98` with a CI-only Qt system-library fix for Linux runners
+- The published tag was not moved; the next release will include the corrected workflow naturally
+
+## v0.1.9-alpha
+
+- Added dedicated Market Data Settings dialog for guided Alpha Vantage setup
+- Added Save Key, Test Connection, Clear Key (confirmed), Enable Online Market Data, and Clear Cache
+- Masked saved credentials; blank key field preserves the stored key; keys stay in the OS credential store
+- Showed Polygon / Massive and Nasdaq Data Link as Coming Later (not selectable)
+- Added Range Calculator onboarding when setup is missing without erasing calculator fields
+- Fetch no longer uses inline API-key editing; settings are opened from the scout panel
+- Connection tests and fetches remain asynchronous and do not freeze Qt
 - Kept online market data optional, disabled by default, and free of brokerage sync or trading controls

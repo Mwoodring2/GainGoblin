@@ -11,7 +11,7 @@ from gaingoblin.market_data.errors import MissingApiKeyError, NetworkUnavailable
 from gaingoblin.market_data.models import HistoricalPriceBar, MarketDataQuote
 from gaingoblin.market_data.provider_base import MarketDataProvider
 from gaingoblin.market_data.secret_store import MemorySecretStore
-from gaingoblin.market_data.settings import MASKED_API_KEY_PLACEHOLDER, MarketDataSettingsStore
+from gaingoblin.market_data.settings import MarketDataSettingsStore
 from gaingoblin.widgets.range_calculator_dialog import MARKET_DATA_WARNING, RangeCalculatorDialog
 
 
@@ -163,7 +163,8 @@ def test_online_market_data_disabled_by_default_without_injected_provider(tmp_pa
     dialog.symbol_name.setText("ORC")
 
     assert dialog.fetch_market_numbers() is None
-    assert "disabled" in dialog.status_label.text().lower()
+    assert "setup" in dialog.status_label.text().lower() or "Market Data" in dialog.status_label.text()
+    assert dialog.open_settings_button.text() == "Open Market Data Settings"
 
     dialog.close()
 
@@ -222,38 +223,6 @@ def test_offline_range_calculator_still_works_without_provider(tmp_path) -> None
     result = dialog.calculate_current_scenario()
     assert result is not None
     assert result.symbol_name == "ORC"
-
-    dialog.close()
-
-
-def test_masked_key_ui_does_not_reveal_stored_value(tmp_path) -> None:
-    app = QApplication.instance() or QApplication([])
-    secrets = MemorySecretStore()
-    secrets.set_secret("Alpha Vantage", "stored-secret-should-stay-hidden")
-    dialog = _dialog(tmp_path, secret_store=secrets)
-    dialog.provider_combo.setCurrentText("Alpha Vantage")
-    dialog._refresh_api_key_field()
-
-    assert dialog.api_key_edit.text() == ""
-    assert dialog.api_key_edit.placeholderText() == MASKED_API_KEY_PLACEHOLDER
-    assert "stored-secret-should-stay-hidden" not in dialog.api_key_edit.text()
-    assert "stored-secret-should-stay-hidden" not in dialog.api_key_edit.placeholderText()
-
-    dialog.close()
-
-
-def test_clearing_saved_key_works(tmp_path) -> None:
-    app = QApplication.instance() or QApplication([])
-    secrets = MemorySecretStore()
-    secrets.set_secret("Alpha Vantage", "clear-me-secret")
-    dialog = _dialog(tmp_path, secret_store=secrets)
-    dialog.provider_combo.setCurrentText("Alpha Vantage")
-    dialog._refresh_api_key_field()
-
-    dialog.clear_saved_api_key()
-
-    assert secrets.get_secret("Alpha Vantage") is None
-    assert dialog.api_key_edit.placeholderText() != MASKED_API_KEY_PLACEHOLDER
 
     dialog.close()
 

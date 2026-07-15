@@ -122,6 +122,32 @@ class MarketDataCache:
         if self.path.exists():
             self.path.unlink()
 
+    def latest_fetched_at(self) -> datetime | None:
+        """Return the newest cache entry timestamp, if any."""
+        latest: datetime | None = None
+        for entry in self._read().values():
+            raw = entry.get("fetched_at")
+            if not raw:
+                continue
+            try:
+                value = datetime.fromisoformat(str(raw))
+            except ValueError:
+                continue
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=UTC)
+            if latest is None or value > latest:
+                latest = value
+        return latest
+
+    def summary_text(self) -> str:
+        """Human-readable cache location and last-fetch summary."""
+        latest = self.latest_fetched_at()
+        if latest is None:
+            stamp = "No successful fetches cached yet"
+        else:
+            stamp = f"Last successful fetch: {latest.astimezone().strftime('%Y-%m-%d %H:%M')}"
+        return f"Cache file: {self.path} · {stamp}"
+
     def _get_historical(
         self,
         provider: str,

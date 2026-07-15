@@ -25,7 +25,7 @@ class MarketDataSettings:
     def __init__(
         self,
         market_data_enabled: bool = False,
-        selected_provider: str = "Mock",
+        selected_provider: str = "Alpha Vantage",
         cache_duration_minutes: int = 5,
         *,
         enabled: bool | None = None,
@@ -43,7 +43,7 @@ class MarketDataSettings:
         _ = api_key
         _ = prefer_realtime
         object.__setattr__(self, "market_data_enabled", bool(market_data_enabled))
-        object.__setattr__(self, "selected_provider", str(selected_provider or "Mock"))
+        object.__setattr__(self, "selected_provider", str(selected_provider or "Alpha Vantage"))
         object.__setattr__(self, "cache_duration_minutes", max(1, int(cache_duration_minutes)))
 
     @property
@@ -85,9 +85,15 @@ class MarketDataSettingsStore:
 
         settings = MarketDataSettings(
             market_data_enabled=bool(raw.get("market_data_enabled", raw.get("enabled", False))),
-            selected_provider=str(raw.get("selected_provider", raw.get("provider_name", "Mock"))),
+            selected_provider=str(raw.get("selected_provider", raw.get("provider_name", "Alpha Vantage"))),
             cache_duration_minutes=max(1, int(raw.get("cache_duration_minutes", 5))),
         )
+        if settings.selected_provider not in {"Alpha Vantage", "Mock"}:
+            settings = MarketDataSettings(
+                market_data_enabled=settings.market_data_enabled,
+                selected_provider="Alpha Vantage",
+                cache_duration_minutes=settings.cache_duration_minutes,
+            )
         self._migrate_plaintext_api_key(raw, settings)
         return settings
 
