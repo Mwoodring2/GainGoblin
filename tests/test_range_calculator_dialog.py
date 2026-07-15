@@ -3,6 +3,7 @@ from decimal import Decimal
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from gaingoblin.models import Holding
@@ -19,10 +20,44 @@ def test_range_calculator_dialog_has_responsive_pinned_button_layout() -> None:
     assert dialog.calculate_button.text() == "Calculate"
     assert dialog.copy_button.text() == "Copy Result Summary"
     assert dialog.fetch_button.text() == "Fetch Market Numbers"
-    assert dialog.use_average_button.text() == "Use Average High/Low"
+    assert dialog.use_average_button.text() == "Apply Fetched Range"
+    assert dialog.refresh_button.text() == "Refresh Market Data"
     assert dialog.clear_fetch_button.text() == "Clear Fetched Data"
     assert dialog.open_settings_button.text() == "Open Market Data Settings"
     assert dialog.market_warning.text() == MARKET_DATA_WARNING
+    assert dialog.minimumWidth() <= 700
+    assert dialog.minimumHeight() <= 520
+
+    dialog.close()
+
+
+def test_range_calculator_dialog_wide_and_narrow_layout() -> None:
+    app = QApplication.instance() or QApplication([])
+    dialog = RangeCalculatorDialog()
+
+    dialog.resize(1000, 700)
+    dialog._rebuild_content_layout()
+    assert dialog._layout_mode == "wide"
+    assert dialog.splitter.orientation() == Qt.Orientation.Horizontal
+
+    dialog.resize(800, 700)
+    dialog._rebuild_content_layout()
+    assert dialog._layout_mode == "narrow"
+    assert dialog.splitter.orientation() == Qt.Orientation.Vertical
+
+    dialog.close()
+
+
+def test_range_calculator_dialog_geometry_for_common_laptop_sizes() -> None:
+    app = QApplication.instance() or QApplication([])
+    dialog = RangeCalculatorDialog()
+
+    for width, height in ((1366, 768), (1024, 700)):
+        dialog.resize(min(width - 40, 1000), min(height - 80, 700))
+        assert dialog.width() <= width
+        assert dialog.height() <= height
+        assert dialog.minimumWidth() <= width
+        assert dialog.minimumHeight() <= height
 
     dialog.close()
 
@@ -48,6 +83,7 @@ def test_range_calculator_dialog_loads_selected_holding() -> None:
     assert dialog.planned_buy_price.text() == "7.50"
     assert dialog.buy_fees.text() == "1.25"
     assert dialog.sell_fees.text() == "0.75"
+    assert dialog._planned_buy_from_holding is True
 
     dialog.close()
 
@@ -88,5 +124,22 @@ def test_range_calculator_dialog_validation_uses_inline_warning() -> None:
     assert result is None
     assert "Average high price" in dialog.status_label.text()
     assert not dialog.copy_button.isEnabled()
+
+    dialog.close()
+
+
+def test_current_quote_comparison_updates_from_fields() -> None:
+    app = QApplication.instance() or QApplication([])
+    dialog = RangeCalculatorDialog()
+    dialog.shares.setText("432")
+    dialog.planned_buy_price.setText("230.61")
+    dialog.buy_fees.setText("0")
+    dialog.sell_fees.setText("0")
+    dialog.current_price.setText("253.85")
+
+    assert dialog.comparison_quote_value.text() == "$253.85"
+    assert dialog.comparison_per_share_value.text() == "+$23.24"
+    assert dialog.comparison_position_value.text() == "+$10,039.68"
+    assert dialog.comparison_roi_value.text() == "+10.08%"
 
     dialog.close()

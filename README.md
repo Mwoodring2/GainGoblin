@@ -274,3 +274,14 @@ Release lock note:
 - Fetch no longer uses inline API-key editing; settings are opened from the scout panel
 - Connection tests and fetches remain asynchronous and do not freeze Qt
 - Kept online market data optional, disabled by default, and free of brokerage sync or trading controls
+
+## v0.1.10-alpha
+
+- Added clearer market-data result cards
+- Added separate quote and historical freshness indicators
+- Added fetched/manual/adjusted value provenance
+- Added historical bar count and date range
+- Improved Range Calculator responsive layout
+- Improved copied-summary source wording
+- Added current-quote comparison
+- Preserved manual-first and offline operation
